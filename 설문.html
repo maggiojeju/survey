@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>설문 질문 연구소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 학생용 단계형 활동지 — 상단 단계 탭, 한 번에 한 문제 카드, 넉넉한 클릭 영역(크롬북 터치) */
+:root{
+  --bg:#EEF3F5; --card:#FFFFFF; --ink:#16293A; --muted:#566978; --line:#D3DDE3;
+  --sea:#1D6A86; --sea-soft:#E1EFF4; --tang:#E9801F; --tang-soft:#FDEEDD;
+  --good:#24804F; --good-soft:#E2F3E9; --bad:#BF3F36; --bad-soft:#F9E5E3;
+  --display:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1920; --card:#16252F; --ink:#E5EEF2; --muted:#9AADB9; --line:#2A3C48;
+  --sea:#62B5D2; --sea-soft:#183644; --tang:#F4A04F; --tang-soft:#3A2A18;
+  --good:#5CC48B; --good-soft:#163628; --bad:#E7786F; --bad-soft:#3D1D1B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1920; --card:#16252F; --ink:#E5EEF2; --muted:#9AADB9; --line:#2A3C48;
+  --sea:#62B5D2; --sea-soft:#183644; --tang:#F4A04F; --tang-soft:#3A2A18;
+  --good:#5CC48B; --good-soft:#163628; --bad:#E7786F; --bad-soft:#3D1D1B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(28px,5vw,40px)}
+h2{font-size:26px}
+h3{font-size:20px}
+p{margin:0}
+.muted{color:var(--muted)}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:13px;letter-spacing:.06em;color:var(--sea);font-weight:600}
+.steps{display:flex;gap:8px;flex-wrap:wrap}
+.step{font:inherit;font-size:15px;font-weight:600;border:2px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 16px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.step .n{font-family:var(--display);font-weight:700;font-size:16px}
+.step[aria-current="true"]{border-color:var(--sea);color:var(--sea);background:var(--sea-soft)}
+.step.done .n::after{content:" ✓"}
+button:focus-visible,.opt:focus-visible{outline:3px solid var(--tang);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:18px}
+.btn{font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 20px;cursor:pointer;background:var(--sea);color:var(--card)}
+.btn.ghost{background:transparent;color:var(--sea);border:2px solid var(--sea)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+
+/* type cards */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.tcard{border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.tname{font-family:var(--display);font-weight:700;font-size:19px;color:var(--sea)}
+.when{font-size:14px}
+.when b{color:var(--tang)}
+
+/* respondent preview */
+.pv{background:var(--bg);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:14px;min-width:0}
+.pv-q{font-weight:600}
+.pv-line{border-bottom:1.5px solid var(--muted);color:var(--muted);padding-bottom:2px;width:70%}
+.pv-line.long{width:100%;height:42px;display:flex;align-items:flex-end}
+.pv-opt{display:flex;align-items:center;gap:8px}
+.dot,.box{width:16px;height:16px;border:2px solid var(--muted);flex:none}
+.dot{border-radius:50%}
+.box{border-radius:3px}
+.dd{border:1.5px solid var(--muted);border-radius:6px;padding:4px 10px;width:max-content;max-width:100%;display:flex;gap:16px;color:var(--muted)}
+.dd-list{display:flex;flex-wrap:wrap;gap:4px 10px;color:var(--muted);font-size:13px}
+.scale{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.scale .s{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px}
+.scale .lab{font-size:12px;color:var(--muted);align-self:center}
+.gridwrap{overflow-x:auto}
+table.g{border-collapse:collapse;font-size:13px}
+table.g th,table.g td{padding:4px 8px;text-align:center;white-space:nowrap}
+table.g th{font-weight:500;color:var(--muted)}
+table.g td:first-child{text-align:left;font-weight:500}
+table.g .dot,table.g .box{display:inline-block;vertical-align:middle}
+
+.roles{background:var(--sea-soft);border-radius:12px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:0 6px;font-size:16px}
+.roles b{color:var(--sea)}
+/* pairs */
+.pairs{display:flex;flex-direction:column;gap:12px}
+.pair{border-left:4px solid var(--tang);background:var(--tang-soft);border-radius:0 12px 12px 0;padding:12px 16px;display:flex;flex-direction:column;gap:4px}
+.pair b{font-family:var(--display);font-weight:700;font-size:17px}
+
+/* quiz */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.counter{font-family:var(--display);font-weight:700;font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums}
+.score{font-size:14px;font-weight:600;color:var(--sea);background:var(--sea-soft);border-radius:999px;padding:4px 12px}
+.scenario{border:2px dashed var(--line);border-radius:14px;padding:16px 18px;font-size:18px;font-weight:600}
+.scenario small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:4px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.opt{font:inherit;text-align:left;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px 14px;cursor:pointer;font-weight:600;min-height:52px}
+.opt:hover:not(:disabled){border-color:var(--sea)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--good);background:var(--good-soft);color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.fb{border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.fb.ok{background:var(--good-soft)}
+.fb.no{background:var(--bad-soft)}
+.fb .verdict{font-family:var(--display);font-weight:700;font-size:19px}
+.fb.ok .verdict{color:var(--good)}
+.fb.no .verdict{color:var(--bad)}
+.math{font-size:14px;background:var(--card);border-radius:8px;padding:8px 12px;border:1px solid var(--line)}
+.math b{color:var(--tang)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.compare > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.tag{font-size:13px;font-weight:700}
+.tag.b{color:var(--bad)} .tag.g{color:var(--good)}
+@media (max-width:560px){.compare{grid-template-columns:1fr}.panel{padding:18px}}
+
+/* summary */
+.big{display:flex;gap:14px;flex-wrap:wrap}
+.big > div{flex:1 1 180px;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.big .num{font-family:var(--display);font-weight:700;font-size:32px;color:var(--sea);font-variant-numeric:tabular-nums}
+ul.check{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+ul.check li{display:flex;gap:10px;align-items:flex-start}
+ul.check li::before{content:"";width:18px;height:18px;border:2px solid var(--sea);border-radius:4px;flex:none;margin-top:4px}
+.mission{background:var(--sea-soft);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+@media (prefers-reduced-motion: no-preference){.fb{animation:pop .25s ease-out}@keyframes pop{from{transform:translateY(6px);opacity:.6}to{transform:none;opacity:1}}}
+
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">5학년 · 데이터 탐정 1차시</div>
+    <h1>설문 질문 연구소</h1>
+    <p class="muted">구글 설문지로 친구들의 생각을 모으기 전에, 어떤 질문 유형을 고를지와 좋은 질문을 만드는 법을 문제를 풀며 익혀요.</p>
+  </header>
+
+  <nav class="steps" id="steps" aria-label="활동 단계"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const TYPES={
+  short:{name:"단답형",when:"<b>짧은 낱말</b>이나 <b>숫자 하나</b>를 쓸 때",ex:"하루에 책을 읽는 시간(분)"},
+  long:{name:"장문형",when:"<b>생각이나 이유</b>를 문장으로 길게 쓸 때",ex:"우리 동네를 좋게 만들 아이디어"},
+  mc:{name:"객관식 질문",when:"보기 중 <b>하나만</b> 고르고, 보기가 <b>적어서 한눈에</b> 보일 때",ex:"가장 좋아하는 계절"},
+  cb:{name:"체크박스",when:"보기 중 <b>여러 개</b>를 고를 수 있을 때",ex:"가 본 오름을 모두"},
+  dd:{name:"드롭다운",when:"보기 중 <b>하나만</b> 고르는데, 보기가 <b>아주 많을</b> 때",ex:"태어난 달(1월~12월)"},
+  scale:{name:"선형 배율",when:"<b>얼마나</b> 그런지 정도를 1~5 같은 <b>숫자 눈금</b>에서 고를 때",ex:"오늘 급식 만족도"},
+  mcgrid:{name:"객관식 그리드",when:"<b>여러 항목</b>에 대한 답을 <b>하나씩</b> 고를 때",ex:"과목별로 좋아하는 정도"},
+  cbgrid:{name:"체크박스 그리드",when:"<b>여러 항목</b>마다 답을 <b>여러 개씩</b> 고를 때",ex:"운동마다 해 본 계절을 모두"},
+  date:{name:"날짜",when:"달력에서 <b>날짜</b>를 고를 때",ex:"생일, 가고 싶은 날"}
+};
+const ORDER=["short","long","mc","cb","dd","scale","mcgrid","cbgrid","date"];
+
+const SAMPLE={
+  short:{q:"하루에 책을 몇 분 읽나요?",ph:"예: 30"},
+  long:{q:"우리 동네를 더 좋게 만들 아이디어를 써 주세요."},
+  mc:{q:"가장 좋아하는 계절은?",opts:["봄","여름","가을","겨울"]},
+  cb:{q:"가 본 오름을 모두 골라 주세요.",opts:["성산일출봉","새별오름","용눈이오름","다랑쉬오름"]},
+  dd:{q:"태어난 달은?",opts:["1월","2월","3월","4월","5월","6월","…","12월"]},
+  scale:{q:"오늘 급식에 얼마나 만족하나요?",min:"매우 불만",max:"매우 만족"},
+  mcgrid:{q:"과목을 얼마나 좋아하나요?",rows:["국어","수학","과학"],cols:["싫어요","보통","좋아요"]},
+  cbgrid:{q:"운동마다 해 본 계절을 모두 골라요.",rows:["줄넘기","수영","축구"],cols:["봄","여름","가을","겨울"]},
+  date:{q:"생일은 언제인가요?"}
+};
+
+function preview(t,d){
+  d=d||SAMPLE[t];
+  let h=`<div class="pv"><div class="pv-q">${d.q}</div>`;
+  if(t==="short")h+=`<div class="pv-line">${d.ph||"내 답변"}</div>`;
+  else if(t==="long")h+=`<div class="pv-line long">내 답변을 길게 써요</div>`;
+  else if(t==="mc"||t==="cb")h+=d.opts.map(o=>`<div class="pv-opt"><span class="${t==="mc"?"dot":"box"}"></span>${o}</div>`).join("");
+  else if(t==="dd")h+=`<div class="dd"><span>선택</span><span>▾</span></div><div class="dd-list">${d.opts.join(" · ")}</div>`;
+  else if(t==="scale")h+=`<div class="scale"><span class="lab">${d.min}</span>${[1,2,3,4,5].map(n=>`<span class="s">${n}<span class="dot"></span></span>`).join("")}<span class="lab">${d.max}</span></div>`;
+  else if(t==="mcgrid"||t==="cbgrid"){
+    const m=t==="mcgrid"?"dot":"box";
+    h+=`<div class="gridwrap"><table class="g"><tr><th></th>${d.cols.map(c=>`<th>${c}</th>`).join("")}</tr>${d.rows.map(r=>`<tr><td>${r}</td>${d.cols.map(()=>`<td><span class="${m}"></span></td>`).join("")}</tr>`).join("")}</table></div>`;
+  }
+  else if(t==="date")h+=`<div class="pv-line">연도 - 월 - 일</div>`;
+  return h+"</div>";
+}
+
+/* ---------- 2단계: 유형 고르기 ---------- */
+const MISSIONS=[
+  {q:"제주에서 가 본 오름을 모두 골라 주세요.",note:"보기: 성산일출봉, 새별오름, 용눈이오름, 다랑쉬오름",
+   choices:["mc","cb","dd","short"],answer:"cb",
+   why:"가 본 오름이 여러 곳일 수 있어요. <b>여러 개를 고를 수 있는 건 체크박스</b>예요. 객관식과 드롭다운은 하나만 고를 수 있어요.",
+   pv:SAMPLE.cb},
+  {q:"가장 좋아하는 계절은 무엇인가요?",note:"보기: 봄, 여름, 가을, 겨울 (하나만)",
+   choices:["dd","cb","mc","long"],answer:"mc",
+   why:"하나만 고르고 보기가 4개뿐이에요. <b>보기가 적으면 객관식</b>이 한눈에 보여서 빨라요. 드롭다운은 한 번 더 눌러야 보기가 보여요.",
+   pv:SAMPLE.mc},
+  {q:"태어난 달은 언제인가요?",note:"보기: 1월부터 12월까지 (하나만)",
+   choices:["mc","dd","cb","long"],answer:"dd",
+   why:"하나만 고르는데 보기가 12개나 돼요. 객관식으로 만들면 화면이 아주 길어져요. <b>보기가 많을 때는 드롭다운</b>으로 접어 두면 깔끔해요.",
+   pv:{q:"태어난 달은?",opts:["1월","2월","3월","…","12월"]}},
+  {q:"하루에 책을 몇 분 읽는지 알아보고, 우리 반 평균을 구하고 싶어요.",note:"한 사람이 하나의 숫자로 답해요.",
+   choices:["mc","short","scale","long"],answer:"short",
+   why:"평균을 구하려면 <b>숫자를 그대로</b> 모아야 해요. '30분~1시간' 같은 객관식 구간으로 모으면 정확한 평균을 낼 수 없어요. <b>단답형</b>으로 만들고, 설정에서 <b>응답 확인 → 숫자</b>를 켜면 글자를 쓸 수 없어요.",
+   math:"수학 연결: <b>평균 = 자료 값을 모두 더한 수 ÷ 자료의 수</b>. 숫자가 있어야 계산할 수 있어요.",
+   pv:{q:"하루에 책을 몇 분 읽나요?",ph:"숫자만 입력 (예: 25)"}},
+  {q:"오늘 급식에 얼마나 만족하는지 알고 싶어요.",note:"'매우 불만'부터 '매우 만족'까지",
+   choices:["scale","cb","short","dd"],answer:"scale",
+   why:"'얼마나'처럼 <b>정도</b>를 묻는 질문은 <b>선형 배율</b>이 딱이에요. 1~5 숫자로 모이니까 나중에 평균 만족도도 구할 수 있어요.",
+   pv:SAMPLE.scale},
+  {q:"국어, 수학, 과학을 각각 얼마나 좋아하는지 알고 싶어요.",note:"과목마다 '싫어요 / 보통 / 좋아요' 중 하나",
+   choices:["mc","cb","mcgrid","cbgrid"],answer:"mcgrid",
+   why:"여러 항목(과목)에 대한 답을 <b>하나씩</b> 골라요. 그래서 <b>객관식 그리드</b>예요. 객관식 질문 3개를 따로 만드는 대신 표 하나로 모을 수 있어요. 항목마다 여러 개를 고르게 하려면 체크박스 그리드를 써요.",
+   pv:SAMPLE.mcgrid},
+  {q:"줄넘기, 수영, 축구를 각각 어느 계절에 해 봤는지 모두 알고 싶어요.",note:"운동마다 계절을 여러 개 고를 수 있어요",
+   choices:["mcgrid","cbgrid","cb","dd"],answer:"cbgrid",
+   why:"여러 항목(운동)이 있고, 항목마다 답을 <b>여러 개</b> 고를 수 있어요. 그래서 <b>체크박스 그리드</b>예요. 객관식 그리드는 줄마다 하나만 고를 수 있어요.",
+   pv:SAMPLE.cbgrid},
+  {q:"우리 동네를 더 좋게 만들 아이디어를 자유롭게 듣고 싶어요.",note:"정해진 보기가 없어요",
+   choices:["short","long","mc","scale"],answer:"long",
+   why:"정해진 답이 없고 생각을 <b>문장으로 길게</b> 써야 해요. 그래서 <b>장문형</b>이에요. 단답형은 짧은 낱말이나 숫자에 알맞아요.",
+   pv:SAMPLE.long}
+];
+
+/* ---------- 3단계: 질문 고치기 ---------- */
+const PROBLEMS={
+  lead:"답을 정해 놓고 묻는다",
+  two:"한 질문에 두 가지를 묻는다",
+  overlap:"보기끼리 겹친다",
+  missing:"보기가 모자란다",
+  vague:"사람마다 뜻을 다르게 읽는다",
+  privacy:"꼭 필요하지 않은 개인정보를 묻는다"
+};
+const FIXES=[
+  {bad:{t:"mc",d:{q:"맛있고 건강한 제주 감귤을 좋아하나요?",opts:["예","아니요"]}},
+   choices:["lead","missing","two","privacy"],answer:"lead",
+   why:"'맛있고 건강한'이라는 말이 '좋다고 대답해!'라고 미리 정해 줘요. 이런 질문은 솔직한 답을 모으기 어려워요. 꾸미는 말을 빼고 정도를 물어봐요.",
+   good:{t:"scale",d:{q:"감귤을 얼마나 좋아하나요?",min:"전혀 안 좋아함",max:"아주 좋아함"}}},
+  {bad:{t:"mc",d:{q:"게임과 유튜브를 좋아하나요?",opts:["예","아니요"]}},
+   choices:["vague","two","overlap","lead"],answer:"two",
+   why:"게임은 좋아하지만 유튜브는 안 좋아하는 친구는 무엇을 골라야 할까요? <b>질문 하나에는 한 가지만</b> 물어요. 두 질문으로 나누거나 체크박스로 바꿔요.",
+   good:{t:"cb",d:{q:"좋아하는 것을 모두 골라 주세요.",opts:["게임","유튜브","둘 다 안 좋아해요"]}}},
+  {bad:{t:"mc",d:{q:"하루에 운동하는 시간은?",opts:["0~30분","30분~1시간","1시간~2시간"]}},
+   choices:["overlap","privacy","lead","two"],answer:"overlap",
+   why:"딱 30분 운동한 친구는 첫째 보기와 둘째 보기 둘 다에 해당돼요. 보기끼리 겹치지 않게 <b>이상·미만</b>으로 경계를 정해요. 2시간 넘게 하는 친구를 위한 보기도 필요해요.",
+   math:"수학 연결: <b>30분 미만</b>은 30분을 넣지 않고, <b>30분 이상</b>은 30분을 넣어요. (수의 범위 단원)",
+   good:{t:"mc",d:{q:"하루에 운동하는 시간은?",opts:["30분 미만","30분 이상 1시간 미만","1시간 이상 2시간 미만","2시간 이상"]}}},
+  {bad:{t:"mc",d:{q:"학교에 올 때 타는 교통수단은?",opts:["버스","자동차"]}},
+   choices:["two","vague","missing","lead"],answer:"missing",
+   why:"걸어오거나 자전거를 타는 친구는 고를 보기가 없어요. 보기를 더 넣고, 미처 생각 못 한 답을 위해 <b>기타</b> 보기를 켜 두면 좋아요.",
+   good:{t:"mc",d:{q:"학교에 올 때 타는 교통수단은?",opts:["걸어서","버스","자동차","자전거","기타: ____"]}}},
+  {bad:{t:"mc",d:{q:"책을 자주 읽나요?",opts:["예","아니요"]}},
+   choices:["vague","overlap","privacy","two"],answer:"vague",
+   why:"'자주'는 사람마다 달라요. 일주일에 한 권도 자주라고 생각하는 친구가 있고, 매일 읽어야 자주라고 생각하는 친구도 있어요. <b>숫자로 정확하게</b> 물어봐요.",
+   good:{t:"short",d:{q:"일주일에 책을 몇 권 읽나요?",ph:"숫자만 입력 (예: 2)"}}},
+  {bad:{t:"short",d:{q:"집 주소와 전화번호를 적어 주세요.",ph:"내 답변"}},
+   choices:["lead","privacy","missing","overlap"],answer:"privacy",
+   why:"설문 목적에 필요하지 않은 개인정보는 묻지 않아요. 주소와 전화번호는 다른 사람이 보면 위험할 수 있어요. 꼭 필요하면 범위를 넓혀서 물어요.",
+   good:{t:"dd",d:{q:"사는 곳은 어디인가요?",opts:["조천읍","구좌읍","제주시 동 지역","기타"]}}}
+];
+
+/* ---------- state ---------- */
+const S={step:0,mi:0,mAns:Array(MISSIONS.length).fill(null),fi:0,fAns:Array(FIXES.length).fill(null)};
+const STEPS=["유형 살펴보기","유형 고르기","질문 고치기","정리하기"];
+const main=document.getElementById("main"),nav=document.getElementById("steps");
+
+function done(i){
+  if(i===0)return S.step>0;
+  if(i===1)return S.mAns.every(a=>a!==null);
+  if(i===2)return S.fAns.every(a=>a!==null);
+  return false;
+}
+function renderNav(){
+  nav.innerHTML=STEPS.map((s,i)=>`<button class="step${done(i)?" done":""}" aria-current="${S.step===i}" data-s="${i}"><span class="n">${i+1}</span>${s}</button>`).join("");
+  nav.querySelectorAll("button").forEach(b=>b.onclick=()=>go(+b.dataset.s));
+}
+function go(i){S.step=i;render();window.scrollTo({top:0,behavior:"smooth"});}
+const score=a=>a.filter((x,i,arr)=>x&&x.ok).length;
+
+function render(){
+  renderNav();
+  [step0,step1,step2,step3][S.step]();
+}
+
+function step0(){
+  main.innerHTML=`<section class="panel">
+    <div><h2>구글 설문지의 질문 유형</h2><p class="muted">응답하는 사람에게는 이렇게 보여요. 각 유형을 언제 쓰는지 읽어 보세요.</p></div>
+    <div class="types">${ORDER.map(t=>`<div class="tcard"><div class="tname">${TYPES[t].name}</div><p class="when">${TYPES[t].when}</p>${preview(t)}</div>`).join("")}</div>
+    <div class="roles"><span><b>참여자</b>는 보기를 고르거나 답을 쓰고,</span><span><b>만드는 사람</b>은 그 답을 모아요.</span></div>
+    <div><h3>헷갈리는 짝꿍</h3></div>
+    <div class="pairs">
+      <div class="pair"><b>객관식 vs 체크박스</b><span>정답이 하나면 객관식, 여러 개 고를 수 있으면 체크박스.</span></div>
+      <div class="pair"><b>객관식 vs 드롭다운</b><span>둘 다 하나만 골라요. 보기가 적으면 한눈에 보이는 객관식, 보기가 많으면 접어 두는 드롭다운.</span></div>
+      <div class="pair"><b>객관식 그리드 vs 체크박스 그리드</b><span>여러 항목을 표로 한꺼번에 물어요. 줄마다 하나만 고르면 객관식 그리드, 줄마다 여러 개 고르면 체크박스 그리드.</span></div>
+      <div class="pair"><b>단답형 vs 객관식 (숫자 질문)</b><span>평균을 구하려면 숫자를 그대로 모으는 단답형. 구간으로 묶은 객관식으로는 정확한 평균을 못 구해요.</span></div>
+    </div>
+    <div class="row"><span></span><button class="btn" id="next">유형 고르기 문제 풀기</button></div>
+  </section>`;
+  document.getElementById("next").onclick=()=>go(1);
+}
+
+function step1(){
+  const m=MISSIONS[S.mi],a=S.mAns[S.mi];
+  let h=`<section class="panel">
+    <div class="qhead"><span class="counter">유형 고르기 ${S.mi+1} / ${MISSIONS.length}</span><span class="score">맞힌 문제 ${score(S.mAns)}개</span></div>
+    <h2>이 질문에는 어떤 유형이 알맞을까요?</h2>
+    <div class="scenario">${m.q}<small>${m.note}</small></div>
+    <div class="opts">${m.choices.map(c=>{
+      let cls="opt";
+      if(a){ if(c===m.answer)cls+=" right"; else if(c===a.pick)cls+=" wrong"; }
+      return `<button class="${cls}" data-c="${c}" ${a?"disabled":""}>${TYPES[c].name}</button>`}).join("")}</div>`;
+  if(a){
+    h+=`<div class="fb ${a.ok?"ok":"no"}"><div class="verdict">${a.ok?"정답이에요!":"아쉬워요. 정답은 "+TYPES[m.answer].name+"!"}</div>
+      <p>${m.why}</p>${m.math?`<div class="math">${m.math}</div>`:""}
+      <div><div class="tag g">${TYPES[m.answer].name} 유형으로 만들면 이렇게 보여요</div>${preview(m.answer,m.pv)}</div></div>`;
+  }
+  const last=S.mi===MISSIONS.length-1;
+  h+=`<div class="row"><button class="btn ghost" id="prev" ${S.mi===0?"disabled":""}>이전</button>
+    <button class="btn" id="next" ${a?"":"disabled"}>${last?"질문 고치기로":"다음 문제"}</button></div></section>`;
+  main.innerHTML=h;
+  main.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{S.mAns[S.mi]={pick:b.dataset.c,ok:b.dataset.c===m.answer};render();});
+  document.getElementById("prev").onclick=()=>{S.mi--;render();};
+  document.getElementById("next").onclick=()=>{if(last)go(2);else{S.mi++;render();}};
+}
+
+function step2(){
+  const f=FIXES[S.fi],a=S.fAns[S.fi];
+  let h=`<section class="panel">
+    <div class="qhead"><span class="counter">질문 고치기 ${S.fi+1} / ${FIXES.length}</span><span class="score">맞힌 문제 ${score(S.fAns)}개</span></div>
+    <h2>이 질문에는 어떤 문제가 있을까요?</h2>
+    ${preview(f.bad.t,f.bad.d)}
+    <div class="opts">${f.choices.map(c=>{
+      let cls="opt";
+      if(a){ if(c===f.answer)cls+=" right"; else if(c===a.pick)cls+=" wrong"; }
+      return `<button class="${cls}" data-c="${c}" ${a?"disabled":""}>${PROBLEMS[c]}</button>`}).join("")}</div>`;
+  if(a){
+    h+=`<div class="fb ${a.ok?"ok":"no"}"><div class="verdict">${a.ok?"잘 찾았어요!":"아쉬워요. 정답은 '"+PROBLEMS[f.answer]+"'"}</div>
+      <p>${f.why}</p>${f.math?`<div class="math">${f.math}</div>`:""}
+      <div class="compare">
+        <div><div class="tag b">고치기 전 · ${TYPES[f.bad.t].name}</div>${preview(f.bad.t,f.bad.d)}</div>
+        <div><div class="tag g">고친 후 · ${TYPES[f.good.t].name}</div>${preview(f.good.t,f.good.d)}</div>
+      </div></div>`;
+  }
+  const last=S.fi===FIXES.length-1;
+  h+=`<div class="row"><button class="btn ghost" id="prev" ${S.fi===0?"disabled":""}>이전</button>
+    <button class="btn" id="next" ${a?"":"disabled"}>${last?"정리하기로":"다음 문제"}</button></div></section>`;
+  main.innerHTML=h;
+  main.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{S.fAns[S.fi]={pick:b.dataset.c,ok:b.dataset.c===f.answer};render();});
+  document.getElementById("prev").onclick=()=>{S.fi--;render();};
+  document.getElementById("next").onclick=()=>{if(last)go(3);else{S.fi++;render();}};
+}
+
+function step3(){
+  const m=score(S.mAns),f=score(S.fAns);
+  const mDone=S.mAns.filter(Boolean).length,fDone=S.fAns.filter(Boolean).length;
+  main.innerHTML=`<section class="panel">
+    <h2>오늘의 연구 결과</h2>
+    <div class="big">
+      <div><div class="muted">유형 고르기</div><div class="num">${m} / ${MISSIONS.length}</div><div class="muted">${mDone<MISSIONS.length?"아직 안 푼 문제가 있어요":"모두 풀었어요"}</div></div>
+      <div><div class="muted">질문 고치기</div><div class="num">${f} / ${FIXES.length}</div><div class="muted">${fDone<FIXES.length?"아직 안 푼 문제가 있어요":"모두 풀었어요"}</div></div>
+    </div>
+    <div><h3>내 설문을 만들기 전에 확인해요</h3></div>
+    <ul class="check">
+      <li>질문 하나에는 한 가지만 물었나요?</li>
+      <li>'맛있는', '좋은'처럼 답을 정해 주는 말을 뺐나요?</li>
+      <li>'자주', '많이' 대신 숫자로 물었나요?</li>
+      <li>보기끼리 겹치지 않게 이상·미만으로 나눴나요?</li>
+      <li>필요한 보기가 다 있나요? 모자라면 '기타'를 켰나요?</li>
+      <li>평균을 구할 숫자 질문은 단답형 + 응답 확인(숫자)으로 만들었나요?</li>
+      <li>이름, 주소, 전화번호처럼 필요 없는 개인정보는 묻지 않았나요?</li>
+    </ul>
+    <div class="mission">
+      <h3>이제 우리 모둠 설문을 만들어요</h3>
+      <p>문항은 4~5개. 그중 하나는 <b>숫자로 답하는 질문</b>(평균을 구할 거예요), 하나는 <b>제주에 관한 예상 질문</b>이에요.</p>
+      <p class="muted">예상 질문 예시: 제주에 관광객이 가장 많이 오는 달은 언제일까요? 제주에서 비가 가장 많이 오는 달은?</p>
+    </div>
+    <div class="row"><button class="btn ghost" id="again">처음부터 다시 풀기</button><span></span></div>
+  </section>`;
+  document.getElementById("again").onclick=()=>{S.mi=0;S.fi=0;S.mAns.fill(null);S.fAns.fill(null);go(0);};
+}
+render();
+</script>
+</body>
+</html>
